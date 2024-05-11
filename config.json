@@ -1,4 +1,4 @@
 {
-  "refreshinterval": 10000,
+  "refreshinterval": 30000,
   "maxMatchesLeetify": 9999
 }

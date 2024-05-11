@@ -84,7 +84,7 @@ class CS2_Players_Data {
           premier = c.hex(`#4b69fe`)(`${premier}`);
         } else if (premier > 4999) {
           premier = c.hex(`#5e98d9`)(`${premier}`);
-        } else if (premier < 5000) {
+        } else {
           premier = c.hex(`#b0c4d8`)(`${premier}`);
         }
       }
@@ -107,13 +107,17 @@ class CS2_Players_Data {
       let kdr = [];
       let hsp = [];
       player.games_full.forEach((game) => {
-        const playerStats = game.playerStats.find((player) => player.steamId === player.steamId);
+        const playerStats = game?.playerStats.find((p) => p.steam64Id === player.meta.steam64Id);
         if (playerStats) {
-          kills.push(playerStats.totalKills);
           reactionTime.push(playerStats.reactionTime);
           adr.push(playerStats.dpr);
           kdr.push(playerStats.kdRatio);
           hsp.push(playerStats.hsp * 100);
+        }
+      });
+      player.games.forEach((game) => {
+        if (game.kills >= 0) {
+          kills.push(game.kills);
         }
       });
       const minKills = Math.min(...kills);
@@ -136,8 +140,10 @@ class CS2_Players_Data {
       const avgHSP = hsp.reduce((a, b) => a + b, 0) / hsp.length;
       const maxHSP = Math.max(...hsp);
 
+      const name = player.meta.name.length === 0 ? player.meta.steam64Id : player.meta.name;
+
       data.push([
-        player.meta.name,
+        name,
         leetify,
         premier,
         aim,
@@ -174,11 +180,11 @@ class CS2_Players_Data {
           .filter((x) => x.length > 0)
           .map((x) => JSON.parse(x))
           .sort((a, b) => a.steamId - b.steamId);
+
         if (JSON.stringify(this.steamData) !== JSON.stringify(result)) {
           console.log("Refreshing Steam Ids...");
           this.steamData = result;
           this.refreshData();
-        } else {
         }
         return;
       }
@@ -196,7 +202,7 @@ class CS2_Players_Data {
             const matches = await Promise.all(
               leetifyData.games.map(async (game) => {
                 const match = await this.getMatchStats(game["gameId"]);
-                if (match) {
+                if (match && match.playerStats.length > 0) {
                   return match;
                 }
               })
@@ -205,34 +211,18 @@ class CS2_Players_Data {
             this.leetifyData.push(leetifyData);
           } catch (error) {
             this.leetifyData.push({
-              player: player.steam64Id,
-              profile: null,
-              matches: null,
-              analytics: {
-                reactionTime: {
-                  min: null,
-                  avg: null,
-                  max: null,
-                },
-                totalKills: {
-                  min: null,
-                  avg: null,
-                  max: null,
-                },
-                dpr: {
-                  min: null,
-                  avg: null,
-                  max: null,
-                },
-                hsp: {
-                  min: null,
-                  avg: null,
-                  max: null,
-                },
+              meta: {
+                steam64Id: player["steam64Id"],
               },
             });
-            console.log(error);
+            console.log(`Error refreshData | ${error} ${error.cause}`);
           }
+        } else {
+          this.leetifyData.push({
+            meta: {
+              steam64Id: player["steam64Id"],
+            },
+          });
         }
       })
     );
@@ -245,7 +235,7 @@ class CS2_Players_Data {
       const data = await fetch(this.apiLeetify.profile + steamId).then((res) => res.json());
       return data;
     } catch (error) {
-      console.log(`No Leetify data for ${steamId}`);
+      console.log(`Error fetch profile: ${steamId} | ${error} ${error.cause}`);
       return false;
     }
   }
@@ -255,8 +245,8 @@ class CS2_Players_Data {
       const data = await fetch(this.apiLeetify.games + matchId).then((res) => res.json());
       return data;
     } catch (error) {
-      console.log(`No Leetify data for match id: ${matchId}`);
-      return null;
+      console.log(`Error fetch match: ${matchId} | ${error} ${error.cause}`);
+      return false;
     }
   }
 
