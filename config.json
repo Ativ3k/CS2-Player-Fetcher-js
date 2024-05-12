@@ -1,4 +1,5 @@
 {
-  "refreshinterval": 30000,
-  "maxMatchesLeetify": 9999
+  "refreshinterval": 20000,
+  "maxMatchesLeetify": 9999,
+  "mySteam64Id": "76561198096123254"
 }
