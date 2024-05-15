@@ -186,6 +186,8 @@ class CS2_Players_Data {
         aim = player.recentGameRatings.aim;
         if (aim > 60) {
           aim = c.green(`${aim.toFixed(2)}`);
+        } else if (aim < 30) {
+          aim = c.red(`${aim.toFixed(2)}`);
         } else {
           aim = c.white(`${aim.toFixed(2)}`);
         }
@@ -193,6 +195,8 @@ class CS2_Players_Data {
         pos = player.recentGameRatings.positioning;
         if (pos > 60) {
           pos = c.green(`${pos.toFixed(2)}`);
+        } else if (pos < 30) {
+          pos = c.red(`${pos.toFixed(2)}`);
         } else {
           pos = c.white(`${pos.toFixed(2)}`);
         }
@@ -200,6 +204,8 @@ class CS2_Players_Data {
         util = player.recentGameRatings.utility;
         if (util > 60) {
           util = c.green(`${util.toFixed(2)}`);
+        } else if (util < 30) {
+          util = c.red(`${util.toFixed(2)}`);
         } else {
           util = c.white(`${util.toFixed(2)}`);
         }
@@ -234,9 +240,9 @@ class CS2_Players_Data {
       const avgRT = (reactionTime.reduce((a, b) => a + b, 0) / reactionTime.length).toFixed(0) || null;
       const maxRT = Math.max(...reactionTime).toFixed(0) || null;
 
-      const minADR = Math.min(...adr).toFixed(2) || null;
-      const avgADR = (adr.reduce((a, b) => a + b, 0) / adr.length).toFixed(2) || null;
-      const maxADR = Math.max(...adr).toFixed(2) || null;
+      const minADR = Math.min(...adr).toFixed(0) || null;
+      const avgADR = (adr.reduce((a, b) => a + b, 0) / adr.length).toFixed(0) || null;
+      const maxADR = Math.max(...adr).toFixed(0) || null;
 
       const minKDR = Math.min(...kdr).toFixed(2) || null;
       const avgKDR = (kdr.reduce((a, b) => a + b, 0) / kdr.length).toFixed(2) || null;
@@ -252,7 +258,7 @@ class CS2_Players_Data {
       const kdrStr = `${minKDR.padStart(4, " ")} ${c.yellow("/")} ${avgKDR.padStart(4, " ")} ${c.yellow("/")} ${maxKDR.padStart(4, " ")}`;
       const hspStr = `${minHSP.padStart(3, " ")} ${c.yellow("/")} ${avgHSP.padStart(3, " ")} ${c.yellow("/")} ${maxHSP.padStart(3, " ")}`;
       const rtStr = `${minRT.padStart(4, " ")} ${c.yellow("/")} ${avgRT.padStart(4, " ")} ${c.yellow("/")} ${maxRT.padStart(4, " ")} ms`;
-      const adrStr = `${minADR.padStart(5, " ")} ${c.yellow("/")} ${avgADR.padStart(5, " ")} ${c.yellow("/")} ${maxADR.padStart(5, " ")}`;
+      const adrStr = `${minADR.padStart(3, " ")} ${c.yellow("/")} ${avgADR.padStart(3, " ")} ${c.yellow("/")} ${maxADR.padStart(3, " ")}`;
 
       const error = this.cache.get(`err:${player.meta.steam64Id}`)?.error || false;
       if (error) {
@@ -332,14 +338,14 @@ class CS2_Players_Data {
          *  TODO: Test it and find better way to handle?
          */
         const isFullData = result.length > 2;
-        // if (JSON.stringify(this.steamData) !== JSON.stringify(result) && isFullData) {
-        const { mySteam64Id } = this.cfg;
-        if (!isNaN(Number(mySteam64Id))) {
-          result.push({ steam64Id: mySteam64Id, timestamp: (Date.now() / 1000).toFixed(0) });
+        if (JSON.stringify(this.steamData) !== JSON.stringify(result) && isFullData) {
+          const { mySteam64Id } = this.cfg;
+          if (!isNaN(Number(mySteam64Id))) {
+            result.push({ steam64Id: mySteam64Id, timestamp: (Date.now() / 1000).toFixed(0) });
+          }
+          this.steamData = result;
+          this.refreshData();
         }
-        this.steamData = result;
-        this.refreshData();
-        // }
       }
     });
   }
